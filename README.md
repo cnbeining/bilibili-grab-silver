@@ -1,5 +1,5 @@
-# bilibili-grab-sliver
-Auto grab Bilibili's live sliver
+# bilibili-grab-silver
+Auto grab Bilibili's live silver
 
 
 Usage

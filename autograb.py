@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding:utf-8
 # Author:  Beining --<i#cnbeining.com>
-# Purpose: Auto grab sliver of Bilibili
+# Purpose: Auto grab silver of Bilibili
 # Created: 10/22/2015
 # https://www.cnbeining.com/
 # https://github.com/cnbeining
@@ -188,7 +188,7 @@ def usage():
 def main(headers = {}, uploader='i'):
     """"""
     time_in_minutes, silver = get_new_task_time_and_award(headers)
-    print('ETA: {time_in_minutes} minutes, sliver: {silver}'.format(time_in_minutes = time_in_minutes, silver = silver))
+    print('ETA: {time_in_minutes} minutes, silver: {silver}'.format(time_in_minutes = time_in_minutes, silver = silver))
     now = datetime.datetime.now()
     picktime = now + datetime.timedelta(minutes = time_in_minutes)
     while 1:

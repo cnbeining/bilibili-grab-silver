@@ -213,7 +213,7 @@ def main(headers = {}, uploader='i'):
 if __name__=='__main__':
     argv_list = []
     argv_list = sys.argv[1:]
-    cookiepath = ''
+    cookiepath,uploader = '', ''
     try:
         opts, args = getopt.getopt(argv_list, "hc:u:",
                                    ['help', "cookie=", "uploader="])
@@ -227,11 +227,12 @@ if __name__=='__main__':
         if o in ('-c', '--cookie'):
             cookiepath = a
             print('aasd')
-
         if o in ('-u', '--uploader'):
             uploader = a
     if cookiepath == '':
         cookiepath = './bilicookies'
+    if uploader == '':
+        uploader = 'i'
     cookies = read_cookie(cookiepath)[0]
     headers = {
         'dnt': '1',

@@ -152,6 +152,23 @@ def read_cookie(cookiepath):
         return ['']
 
 #----------------------------------------------------------------------
+def captcha_wrapper(headers, uploader):
+    """"""
+    captcha_link = get_captcha_from_live(headers, uploader)
+    captcha_text = image_link_ocr(captcha_link).encode('utf-8')
+    answer = ''
+    if safe_to_eval(captcha_text):
+        try:
+            answer = eval(captcha_text)  #+ -
+        except NameError:
+            answer = ''
+    if answer == '':  #error or cannot be eval
+        print('WARNING: Cannot automatic the process due to security concerns')
+        print('OCR result: {captcha_text}'.format(captcha_text = captcha_text))
+        answer = raw_input('please type the result by yourself: ')
+    return answer
+
+#----------------------------------------------------------------------
 def usage():
     """"""
     print("""Auto-grab
@@ -180,19 +197,16 @@ def main(headers = {}, uploader='i'):
             time.sleep(30)
         else:
             break
-    captcha_link = get_captcha_from_live(headers, uploader)
-    captcha_text = image_link_ocr(captcha_link).encode('utf-8')
-    answer = ''
-    if safe_to_eval(captcha_text):
-        try:
-            answer = eval(captcha_text)  #+ -
-        except NameError:
-            answer = ''
-    if answer == '':  #error or cannot be eval
-        print('WARNING: Cannot automatic the process due to security concerns')
-        print('OCR result: {captcha_text}'.format(captcha_text = captcha_text))
-        answer = raw_input('please type the result by yourself: ')
+    answer = captcha_wrapper(headers, uploader)
     award = get_award(headers, answer)
+    if award == -400 or award == -99:  #incorrect captcha/not good to collect
+        for i in range(10):
+            captcha_wrapper(headers, uploader)
+            award = get_award(headers, answer)
+            if award == True:
+                break
+            else:
+                time.sleep(5)
     print('Award: {award}'.format(award = award))
     return award
 

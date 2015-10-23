@@ -116,7 +116,7 @@ def send_heartbeat(headers):
     response = requests.get(url, headers=headers)
     a = loads(response.content)
     if response.status_code != 200 or a['code'] != 0:
-        print('WARNING: Shit happened!')
+        print('WARNING: S**t happened!')
         print(a['msg'])
     else:
         return True

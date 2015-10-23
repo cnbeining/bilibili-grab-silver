@@ -116,7 +116,7 @@ def send_heartbeat(headers):
     response = requests.get(url, headers=headers)
     a = loads(response.content)
     if response.status_code != 200 or a['code'] != 0:
-        print('WARNING: S**t happened!')
+        print('WARNING: Unable to send heartbeat!')
         print(a['msg'])
     else:
         return True
@@ -129,7 +129,7 @@ def get_award(headers, captcha):
     response = requests.get(url, headers=headers)
     a = loads(response.content)
     if response.status_code != 200 or a['code'] != 0:
-        print('WARNING: SHTF!')
+        print('WARNING: Unable to obtain!')
         print(a['msg'])
         return False
     else:
@@ -231,6 +231,10 @@ if __name__=='__main__':
             uploader = a
     if cookiepath == '':
         cookiepath = './bilicookies'
+    if not os.path.exists(cookiepath):
+    	print('Unable to open the cookie\'s file!')
+    	print('Please put your cookie in the file \"bilicookies\" or set a path yourself')
+    	exit()
     if uploader == '':
         uploader = 'i'
     cookies = read_cookie(cookiepath)[0]

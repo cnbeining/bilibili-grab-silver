@@ -23,7 +23,7 @@ import re
 def generate_16_integer():
     """None->str"""
     from random import randint
-    return str(random.randint(1000000000000000, 9999999999999999))
+    return str(randint(1000000000000000, 9999999999999999))
 
 #----------------------------------------------------------------------
 def safe_to_eval(string_this):
@@ -126,11 +126,12 @@ def get_award(headers, captcha):
     """dict, str->int/str"""
     random_t = generate_16_integer()
     url = 'http://live.bilibili.com/freeSilver/getAward?r=0.{random_t}&captcha={captcha}'.format(random_t = random_t, captcha = captcha)
-    requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers)
     a = loads(response.content)
     if response.status_code != 200 or a['code'] != 0:
         print('WARNING: SHTF!')
         print(a['msg'])
+        return False
     else:
         return int(a['data']['awardSilver'])
 
@@ -139,6 +140,7 @@ def read_cookie(cookiepath):
     """str->list
     Original target: set the cookie
     Target now: Set the global header"""
+    print(cookiepath)
     try:
         cookies_file = open(cookiepath, 'r')
         cookies = cookies_file.readlines()
@@ -170,7 +172,7 @@ def main(headers = {}, uploader='i'):
     """"""
     time_in_minutes, silver = get_new_task_time_and_award(headers)
     print('ETA: {time_in_minutes} minutes, sliver: {silver}'.format(time_in_minutes = time_in_minutes, silver = silver))
-    #now = datetime.datetime.now()
+    now = datetime.datetime.now()
     picktime = now + datetime.timedelta(minutes = time_in_minutes)
     while 1:
         if datetime.datetime.now() <= picktime:
@@ -192,7 +194,7 @@ def main(headers = {}, uploader='i'):
         answer = raw_input('please type the result by yourself: ')
     award = get_award(headers, answer)
     print('Award: {award}'.format(award = award))
-    return True
+    return award
 
 if __name__=='__main__':
     argv_list = []
@@ -210,11 +212,12 @@ if __name__=='__main__':
             exit()
         if o in ('-c', '--cookie'):
             cookiepath = a
-            if cookiepath == '':
-                logging.warning('No cookie path set, use default: ./bilicookies')
-                cookiepath = './bilicookies'
+            print('aasd')
+
         if o in ('-u', '--uploader'):
             uploader = a
+    if cookiepath == '':
+        cookiepath = './bilicookies'
     cookies = read_cookie(cookiepath)[0]
     headers = {
         'dnt': '1',

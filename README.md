@@ -26,6 +26,8 @@ Requirement
 
 - BaiduOcr (https://github.com/Linusp/baidu_ocr)
 
+- ssl package, as in openssl, should you use Imgur
+
 Author
 -----
 

@@ -18,6 +18,12 @@ import datetime
 import time
 import base64,hmac,hashlib
 import re
+try:
+	from baiduocr import BaiduOcr
+except(ImportError):
+	print("You need BaiduOcr module.")
+	print("https://github.com/Linusp/baidu_ocr")
+	exit()
 
 #----------------------------------------------------------------------
 def generate_16_integer():
@@ -98,7 +104,6 @@ def image_to_imgur_link(file_this):
 #----------------------------------------------------------------------
 def image_link_ocr(image_link):
     """"""
-    from baiduocr import BaiduOcr
     
     API_KEY = 'c1ff362dc90585fed08e80460496eabd'
     client = BaiduOcr(API_KEY, 'test')  # 使用个人免费版 API，企业版替换为 'online'

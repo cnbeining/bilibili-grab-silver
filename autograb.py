@@ -19,6 +19,13 @@ import time
 import base64,hmac,hashlib
 import re
 
+# Dual support
+try:
+    input = raw_input
+except NameError:
+    pass
+
+
 #----------------------------------------------------------------------
 def generate_16_integer():
     """None->str"""
@@ -99,12 +106,12 @@ def image_to_imgur_link(file_this):
 def image_link_ocr(image_link):
     """"""
     from baiduocr import BaiduOcr
-    
+
     API_KEY = 'c1ff362dc90585fed08e80460496eabd'
     client = BaiduOcr(API_KEY, 'test')  # 使用个人免费版 API，企业版替换为 'online'
-    
+
     res = client.recog(image_link, service='Recognize', lang='CHN_ENG')
-    
+
     return res['retData'][0]['word']
 
 #----------------------------------------------------------------------
@@ -165,20 +172,20 @@ def captcha_wrapper(headers, uploader):
     if answer == '':  #error or cannot be eval
         print('WARNING: Cannot automatic the process due to security concerns')
         print('OCR result: {captcha_text}'.format(captcha_text = captcha_text))
-        answer = raw_input('please type the result by yourself: ')
+        answer = input('please type the result by yourself: ')
     return answer
 
 #----------------------------------------------------------------------
 def usage():
     """"""
     print("""Auto-grab
-    
+
     -h: help:
     This.
-    
+
     -c: cookies:
     location of cookies
-    
+
     -u: Uploader:
     t: Tietuku
     i: Imgur
@@ -233,9 +240,9 @@ if __name__=='__main__':
     if cookiepath == '':
         cookiepath = './bilicookies'
     if not os.path.exists(cookiepath):
-    	print('Unable to open the cookie\'s file!')
-    	print('Please put your cookie in the file \"bilicookies\" or set a path yourself')
-    	exit()
+        print('Unable to open the cookie\'s file!')
+        print('Please put your cookie in the file \"bilicookies\" or set a path yourself')
+        exit()
     if uploader == '':
         uploader = 'i'
     cookies = read_cookie(cookiepath)[0]
@@ -249,4 +256,10 @@ if __name__=='__main__':
         'cookie': cookies,
     }
     while 1:
-        main(headers, uploader)
+        try:
+            main(headers, uploader)
+        except KeyboardInterrupt:
+            exit()
+        except Exception as e:
+            print('Shoot! {e}'.format(e = e))
+            print('Wanna tell me at https://github.com/cnbeining/bilibili-grab-silver/issues ?')

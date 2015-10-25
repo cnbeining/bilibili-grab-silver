@@ -244,7 +244,7 @@ def main(headers = {}, uploader='i'):
     #if award == -400 or award == -99:  #incorrect captcha/not good to collect
     if award < 0:  #error?
         for i in range(5):
-            captcha_wrapper(headers, uploader)
+            answer = captcha_wrapper(headers, uploader)
             award = get_award(headers, answer)
             if award == True:
                 break

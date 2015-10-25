@@ -18,6 +18,9 @@ import datetime
 import time
 import base64,hmac,hashlib
 import re
+import logging
+import traceback
+
 
 # Dual support
 try:
@@ -25,6 +28,23 @@ try:
 except NameError:
     pass
 
+# LATER
+#TIETUKU_ACCESS_KEY = 
+#TIETUKU_SECRET_KEY = 
+#TIETUKU_ALBUM_ID =
+#IMGUR_API_KEY =
+#BAIDU_KEY =
+
+#----------------------------------------------------------------------
+def logging_level_reader(LOG_LEVEL):
+    """str->int
+    Logging level."""
+    return {
+        'INFO': logging.INFO,
+        'DEBUG': logging.DEBUG,
+        'WARNING': logging.WARNING,
+        'FATAL': logging.FATAL
+    }.get(LOG_LEVEL)
 
 #----------------------------------------------------------------------
 def generate_16_integer():
@@ -49,7 +69,8 @@ def get_new_task_time_and_award(headers):
     random_r = generate_16_integer()
     url = 'http://live.bilibili.com/FreeSilver/getCurrentTask?r=0.{random_r}'.format(random_r = random_r)
     response = requests.get(url, headers=headers)
-    a = loads(response.content)
+    a = loads(response.content.decode('utf-8'))
+    logging.debug(a)
     if a['code'] == 0:
         return (a['data']['minute'], a['data']['silver'])
 
@@ -65,6 +86,12 @@ def get_captcha_from_live(headers, uploader = 'i'):
         result = uploadImageToTietuku(response.raw)
     elif uploader == 'i':  #imgur
         result = image_to_imgur_link(response.raw)
+    elif uploader == 'l':  #local
+        filename = generate_16_integer() + ".jpg"
+        with open(filename, "wb") as f:
+            f.write(response.content)
+        result = os.path.abspath(filename)
+    logging.debug(result)
     return result
 
 #----------------------------------------------------------------------
@@ -78,7 +105,8 @@ def uploadImageToTietuku(file):
     encodedSign = base64.urlsafe_b64encode(sign)
     Token = "98bf82eb7ddcb735e77d7e6c71b723c83265e560" + ':' + encodedSign + ':' + encodedParam
     a = requests.post(URL, {"Token":Token},files={"file":file})
-    return str(json.loads(a.content)['linkurl'])
+    logging.debug(a.content)
+    return str(json.loads(a.content.decode('utf-8'))['linkurl'])
 
 #----------------------------------------------------------------------
 def image_to_imgur_link(file_this):
@@ -97,6 +125,7 @@ def image_to_imgur_link(file_this):
         }
     )
     info = json.loads(j1.text.decode('utf-8'))
+    logging.debug(info)
     #status_this = str(info['status'])
     #print(info)
     link_this = str(info['data']['link'])
@@ -104,13 +133,15 @@ def image_to_imgur_link(file_this):
 
 #----------------------------------------------------------------------
 def image_link_ocr(image_link):
-    """"""
+    """link can be local file"""
     from baiduocr import BaiduOcr
 
     API_KEY = 'c1ff362dc90585fed08e80460496eabd'
     client = BaiduOcr(API_KEY, 'test')  # 使用个人免费版 API，企业版替换为 'online'
 
     res = client.recog(image_link, service='Recognize', lang='CHN_ENG')
+    
+    logging.debug(res)
 
     return res['retData'][0]['word']
 
@@ -121,9 +152,9 @@ def send_heartbeat(headers):
     url = 'http://live.bilibili.com/freeSilver/heart?r=0.{random_t}'.format(random_t = random_t)
     #print(url)
     response = requests.get(url, headers=headers)
-    a = loads(response.content)
+    a = loads(response.content.decode('utf-8'))
     if response.status_code != 200 or a['code'] != 0:
-        print('WARNING: Unable to send heartbeat!')
+        #print('WARNING: Unable to send heartbeat!')
         print(a['msg'])
     else:
         return True
@@ -134,7 +165,7 @@ def get_award(headers, captcha):
     random_t = generate_16_integer()
     url = 'http://live.bilibili.com/freeSilver/getAward?r=0.{random_t}&captcha={captcha}'.format(random_t = random_t, captcha = captcha)
     response = requests.get(url, headers=headers)
-    a = loads(response.content)
+    a = loads(response.content.decode('utf-8'))
     if response.status_code != 200 or a['code'] != 0:
         print('WARNING: Unable to obtain!')
         print(a['msg'])
@@ -187,8 +218,12 @@ def usage():
     location of cookies
 
     -u: Uploader:
+    l: local
     t: Tietuku
     i: Imgur
+    
+    -l: Default: INFO
+    INFO/DEBUG
     """)
 
 #----------------------------------------------------------------------
@@ -221,10 +256,10 @@ def main(headers = {}, uploader='i'):
 if __name__=='__main__':
     argv_list = []
     argv_list = sys.argv[1:]
-    cookiepath,uploader = '', ''
+    cookiepath,uploader,LOG_LEVEL = '', '', ''
     try:
-        opts, args = getopt.getopt(argv_list, "hc:u:",
-                                   ['help', "cookie=", "uploader="])
+        opts, args = getopt.getopt(argv_list, "hc:u:l:",
+                                   ['help', "cookie=", "uploader=", "log="])
     except getopt.GetoptError:
         usage()
         exit()
@@ -237,6 +272,12 @@ if __name__=='__main__':
             print('aasd')
         if o in ('-u', '--uploader'):
             uploader = a
+        if o in ('-l', '--log'):
+            try:
+                LOG_LEVEL = str(a)
+            except Exception:
+                LOG_LEVEL = 'INFO'
+    logging.basicConfig(level = logging_level_reader(LOG_LEVEL))
     if cookiepath == '':
         cookiepath = './bilicookies'
     if not os.path.exists(cookiepath):
@@ -244,7 +285,7 @@ if __name__=='__main__':
         print('Please put your cookie in the file \"bilicookies\" or set a path yourself')
         exit()
     if uploader == '':
-        uploader = 'i'
+        uploader = 'l'
     cookies = read_cookie(cookiepath)[0]
     headers = {
         'dnt': '1',
@@ -262,4 +303,4 @@ if __name__=='__main__':
             exit()
         except Exception as e:
             print('Shoot! {e}'.format(e = e))
-            print('Wanna tell me at https://github.com/cnbeining/bilibili-grab-silver/issues ?')
+            traceback.print_exc()

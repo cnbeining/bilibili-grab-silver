@@ -169,7 +169,7 @@ def get_award(headers, captcha):
     if response.status_code != 200 or a['code'] != 0:
         print('WARNING: Unable to obtain!')
         print(a['msg'])
-        return False
+        return (int(a['code']))
     else:
         return int(a['data']['awardSilver'])
 
@@ -243,12 +243,14 @@ def main(headers = {}, uploader='i'):
     award = get_award(headers, answer)
     #if award == -400 or award == -99:  #incorrect captcha/not good to collect
     if award < 0:  #error?
+        #print('ere')
         for i in range(5):
             answer = captcha_wrapper(headers, uploader)
             award = get_award(headers, answer)
             if award == True:
                 break
             else:
+                print('Oops, retry #{i}'.format(i = i))
                 time.sleep(5)
     print('Award: {award}'.format(award = award))
     return award

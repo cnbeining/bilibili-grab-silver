@@ -32,8 +32,6 @@ Requirement
 
 - BaiduOcr (https://github.com/Linusp/baidu_ocr)
 
-- for 3.x, check https://github.com/cnbeining/baidu_ocr for now
-
 Author
 -----
 

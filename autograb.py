@@ -20,6 +20,7 @@ import base64,hmac,hashlib
 import re
 import logging
 import traceback
+import glob
 
 
 # Dual support
@@ -34,6 +35,8 @@ except NameError:
 #TIETUKU_ALBUM_ID =
 #IMGUR_API_KEY =
 #BAIDU_KEY =
+global TEMP_IMG_LIST
+TEMP_IMG_LIST = []
 
 #----------------------------------------------------------------------
 def logging_level_reader(LOG_LEVEL):
@@ -90,6 +93,7 @@ def get_captcha_from_live(headers, uploader = 'i'):
         filename = generate_16_integer() + ".jpg"
         with open(filename, "wb") as f:
             f.write(response.content)
+        TEMP_IMG_LIST.append(filename)
         result = os.path.abspath(filename)
     logging.debug(result)
     return result
@@ -178,7 +182,7 @@ def read_cookie(cookiepath):
     """str->list
     Original target: set the cookie
     Target now: Set the global header"""
-    print(cookiepath)
+    #print(cookiepath)
     try:
         cookies_file = open(cookiepath, 'r')
         cookies = cookies_file.readlines()
@@ -232,7 +236,7 @@ def main(headers = {}, uploader='i'):
     time_in_minutes, silver = get_new_task_time_and_award(headers)
     print('ETA: {time_in_minutes} minutes, silver: {silver}'.format(time_in_minutes = time_in_minutes, silver = silver))
     now = datetime.datetime.now()
-    picktime = now + datetime.timedelta(minutes = time_in_minutes)
+    picktime = now + datetime.timedelta(minutes = time_in_minutes) + datetime.timedelta(seconds = 10)  #safer for BS
     while 1:
         if datetime.datetime.now() <= picktime:
             send_heartbeat(headers)
@@ -243,8 +247,7 @@ def main(headers = {}, uploader='i'):
     award = get_award(headers, answer)
     #if award == -400 or award == -99:  #incorrect captcha/not good to collect
     if award < 0:  #error?
-        #print('ere')
-        for i in range(5):
+        for i in range(10):
             answer = captcha_wrapper(headers, uploader)
             award = get_award(headers, answer)
             if award == True:
@@ -271,7 +274,6 @@ if __name__=='__main__':
             exit()
         if o in ('-c', '--cookie'):
             cookiepath = a
-            print('aasd')
         if o in ('-u', '--uploader'):
             uploader = a
         if o in ('-l', '--log'):
@@ -302,7 +304,9 @@ if __name__=='__main__':
         try:
             main(headers, uploader)
         except KeyboardInterrupt:
+            [os.remove(i) for i in TEMP_IMG_LIST]
             exit()
         except Exception as e:
+            [os.remove(i) for i in TEMP_IMG_LIST]
             print('Shoot! {e}'.format(e = e))
             traceback.print_exc()

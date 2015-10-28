@@ -240,7 +240,7 @@ def main(headers = {}, uploader='i'):
     while 1:
         if datetime.datetime.now() <= picktime:
             send_heartbeat(headers)
-            time.sleep(30)
+            time.sleep(61)
         else:
             break
     answer = captcha_wrapper(headers, uploader)

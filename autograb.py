@@ -10,18 +10,17 @@ import sys
 import os
 import requests
 import json
-from base64 import b64encode
-import shutil
 import getopt
 from json import loads
 import datetime
 import time
-import base64,hmac,hashlib
-import re
 import logging
 import traceback
 import glob
 
+APPKEY = '85eb6835b0a1034e'
+SECRETKEY = '2ad42749773c441109bdc0191257a664'
+VER = '0.98.86'
 
 # Dual support
 try:
@@ -29,145 +28,40 @@ try:
 except NameError:
     pass
 
-# LATER
-#TIETUKU_ACCESS_KEY = 
-#TIETUKU_SECRET_KEY = 
-#TIETUKU_ALBUM_ID =
-#IMGUR_API_KEY =
-#BAIDU_KEY =
-global TEMP_IMG_LIST
-TEMP_IMG_LIST = []
-
-#----------------------------------------------------------------------
-def logging_level_reader(LOG_LEVEL):
-    """str->int
-    Logging level."""
-    return {
-        'INFO': logging.INFO,
-        'DEBUG': logging.DEBUG,
-        'WARNING': logging.WARNING,
-        'FATAL': logging.FATAL
-    }.get(LOG_LEVEL)
-
-#----------------------------------------------------------------------
-def generate_16_integer():
-    """None->str"""
-    from random import randint
-    return str(randint(1000000000000000, 9999999999999999))
-
-#----------------------------------------------------------------------
-def safe_to_eval(string_this):
-    """"""
-    pattern = re.compile(r'^[\d\+\-\s]+$')
-    match = pattern.match(string_this)
-    if match:
-        return True
-    else:
-        return False
-
 #----------------------------------------------------------------------
 def get_new_task_time_and_award(headers):
     """dict->tuple of int
     time_in_minutes, silver"""
-    random_r = generate_16_integer()
-    url = 'http://live.bilibili.com/FreeSilver/getCurrentTask?r=0.{random_r}'.format(random_r = random_r)
+    str2Hash = 'appkey={APPKEY}&platform=ios{SECRETKEY}'.format(APPKEY = APPKEY, SECRETKEY = SECRETKEY)
+    url = 'http://live.bilibili.com/mobile/freeSilverCurrentTask?appkey={APPKEY}&platform=ios&sign={sign}'.format(APPKEY = APPKEY, sign = calc_sign(str2Hash))
     response = requests.get(url, headers=headers)
     a = loads(response.content.decode('utf-8'))
-    logging.debug(a)
     if a['code'] == 0:
         return (a['data']['minute'], a['data']['silver'])
 
 #----------------------------------------------------------------------
-def get_captcha_from_live(headers, uploader = 'i'):
-    """dict,str->str
-    get the captcha link"""
-    import shutil
-    random_t = generate_16_integer()  #save for later
-    url = 'http://live.bilibili.com/FreeSilver/getCaptcha?t=0.{random_t}'.format(random_t = random_t)
-    response = requests.get(url, stream=True, headers=headers)
-    if uploader == 't':  #tietuku
-        result = uploadImageToTietuku(response.raw)
-    elif uploader == 'i':  #imgur
-        result = image_to_imgur_link(response.raw)
-    elif uploader == 'l':  #local
-        filename = generate_16_integer() + ".jpg"
-        with open(filename, "wb") as f:
-            f.write(response.content)
-        TEMP_IMG_LIST.append(filename)
-        result = os.path.abspath(filename)
-    logging.debug(result)
-    return result
-
-#----------------------------------------------------------------------
-def uploadImageToTietuku(file):
-    """rawfile->str
-    http://www.01responsible.com/2015/05/%E8%B4%B4%E5%9B%BE%E5%BA%93python%E4%B8%8A%E4%BC%A0%E4%BB%A3%E7%A0%81/"""
-    URL = "http://up.tietuku.com/"
-    jsoncode = ('{\"deadline\":%s,\"aid\":%s}') % (int(time.time())+60,1145722)
-    encodedParam = base64.urlsafe_b64encode(jsoncode)
-    sign = hmac.new("da39a3ee5e6b4b0d3255bfef95601890afd80709",encodedParam,hashlib.sha1).digest()
-    encodedSign = base64.urlsafe_b64encode(sign)
-    Token = "98bf82eb7ddcb735e77d7e6c71b723c83265e560" + ':' + encodedSign + ':' + encodedParam
-    a = requests.post(URL, {"Token":Token},files={"file":file})
-    logging.debug(a.content)
-    return str(json.loads(a.content.decode('utf-8'))['linkurl'])
-
-#----------------------------------------------------------------------
-def image_to_imgur_link(file_this):
-    """rawfile->str"""
-    import requests
-    import json
-    from base64 import b64encode
-    url = 'https://api.imgur.com/3/image.json'
-    headers = {"Authorization": "Client-ID 4c5addf77336c2d"}
-    j1 = requests.post(
-        url, 
-        headers = headers,
-        data = {
-            'image': b64encode(file_this.read()),
-            'type': 'base64',
-        }
-    )
-    info = json.loads(j1.text.decode('utf-8'))
-    logging.debug(info)
-    #status_this = str(info['status'])
-    #print(info)
-    link_this = str(info['data']['link'])
-    return link_this
-
-#----------------------------------------------------------------------
-def image_link_ocr(image_link):
-    """link can be local file"""
-    from baiduocr import BaiduOcr
-
-    API_KEY = 'c1ff362dc90585fed08e80460496eabd'
-    client = BaiduOcr(API_KEY, 'test')  # 使用个人免费版 API，企业版替换为 'online'
-
-    res = client.recog(image_link, service='Recognize', lang='CHN_ENG')
-    
-    logging.debug(res)
-
-    return res['retData'][0]['word']
-
-#----------------------------------------------------------------------
 def send_heartbeat(headers):
     """"""
-    random_t = generate_16_integer()
-    url = 'http://live.bilibili.com/freeSilver/heart?r=0.{random_t}'.format(random_t = random_t)
+    str2Hash = 'appkey={APPKEY}&platform=ios{SECRETKEY}'.format(APPKEY = APPKEY, SECRETKEY = SECRETKEY)
+    url = 'http://live.bilibili.com/mobile/freeSilverHeart?appkey={APPKEY}&platform=ios&sign={sign}'.format(APPKEY = APPKEY, sign = calc_sign(str2Hash))
+    response = requests.get(url, headers=headers)
     #print(url)
     response = requests.get(url, headers=headers)
     a = loads(response.content.decode('utf-8'))
     if response.status_code != 200 or a['code'] != 0:
         #print('WARNING: Unable to send heartbeat!')
-        print(a['msg'])
+        #print(a['msg'])
+        #NO ONE GIVES A FUCK ABOUT THIS SHIT
+        return False
     else:
         return True
 
 #----------------------------------------------------------------------
-def get_award(headers, captcha):
+def get_award(headers):
     """dict, str->int/str"""
-    random_t = generate_16_integer()
-    url = 'http://live.bilibili.com/freeSilver/getAward?r=0.{random_t}&captcha={captcha}'.format(random_t = random_t, captcha = captcha)
+    freeSilverAward
+    str2Hash = 'appkey={APPKEY}&platform=ios{SECRETKEY}'.format(APPKEY = APPKEY, SECRETKEY = SECRETKEY)
+    url = 'http://live.bilibili.com/mobile/freeSilverAward?appkey={APPKEY}&platform=ios&sign={sign}'.format(APPKEY = APPKEY, sign = calc_sign(str2Hash))
     response = requests.get(url, headers=headers)
     a = loads(response.content.decode('utf-8'))
     if response.status_code != 200 or a['code'] != 0:
@@ -194,23 +88,6 @@ def read_cookie(cookiepath):
         return ['']
 
 #----------------------------------------------------------------------
-def captcha_wrapper(headers, uploader):
-    """"""
-    captcha_link = get_captcha_from_live(headers, uploader)
-    captcha_text = image_link_ocr(captcha_link).encode('utf-8')
-    answer = ''
-    if safe_to_eval(captcha_text):
-        try:
-            answer = eval(captcha_text)  #+ -
-        except NameError:
-            answer = ''
-    if answer == '':  #error or cannot be eval
-        print('WARNING: Cannot automatic the process due to security concerns')
-        print('OCR result: {captcha_text}'.format(captcha_text = captcha_text))
-        answer = input('please type the result by yourself: ')
-    return answer
-
-#----------------------------------------------------------------------
 def usage():
     """"""
     print("""Auto-grab
@@ -221,17 +98,12 @@ def usage():
     -c: cookies:
     location of cookies
 
-    -u: Uploader:
-    l: local
-    t: Tietuku
-    i: Imgur
-    
     -l: Default: INFO
     INFO/DEBUG
     """)
 
 #----------------------------------------------------------------------
-def main(headers = {}, uploader='i'):
+def main(headers = {}):
     """"""
     time_in_minutes, silver = get_new_task_time_and_award(headers)
     print('ETA: {time_in_minutes} minutes, silver: {silver}'.format(time_in_minutes = time_in_minutes, silver = silver))
@@ -243,17 +115,15 @@ def main(headers = {}, uploader='i'):
             time.sleep(61)
         else:
             break
-    answer = captcha_wrapper(headers, uploader)
-    award = get_award(headers, answer)
+    award = get_award(headers)
     #if award == -400 or award == -99:  #incorrect captcha/not good to collect
     if award < 0:  #error?
         for i in range(10):
-            answer = captcha_wrapper(headers, uploader)
-            award = get_award(headers, answer)
+            award = get_award(headers)
             if award == True:
                 break
             else:
-                print('Oops, retry #{i}'.format(i = i))
+                print('Fuck, retry #{i}'.format(i = i))
                 time.sleep(5)
     print('Award: {award}'.format(award = award))
     return award
@@ -263,8 +133,8 @@ if __name__=='__main__':
     argv_list = sys.argv[1:]
     cookiepath,uploader,LOG_LEVEL = '', '', ''
     try:
-        opts, args = getopt.getopt(argv_list, "hc:u:l:",
-                                   ['help', "cookie=", "uploader=", "log="])
+        opts, args = getopt.getopt(argv_list, "hc:l:",
+                                   ['help', "cookie=", "log="])
     except getopt.GetoptError:
         usage()
         exit()
@@ -274,8 +144,6 @@ if __name__=='__main__':
             exit()
         if o in ('-c', '--cookie'):
             cookiepath = a
-        if o in ('-u', '--uploader'):
-            uploader = a
         if o in ('-l', '--log'):
             try:
                 LOG_LEVEL = str(a)
@@ -288,8 +156,6 @@ if __name__=='__main__':
         print('Unable to open the cookie\'s file!')
         print('Please put your cookie in the file \"bilicookies\" or set a path yourself')
         exit()
-    if uploader == '':
-        uploader = 'l'
     cookies = read_cookie(cookiepath)[0]
     headers = {
         'dnt': '1',
@@ -302,11 +168,4 @@ if __name__=='__main__':
     }
     while 1:
         try:
-            main(headers, uploader)
-        except KeyboardInterrupt:
-            [os.remove(i) for i in TEMP_IMG_LIST]
-            exit()
-        except Exception as e:
-            [os.remove(i) for i in TEMP_IMG_LIST]
-            print('Shoot! {e}'.format(e = e))
-            traceback.print_exc()
+            main(headers)

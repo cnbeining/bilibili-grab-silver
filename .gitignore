@@ -57,7 +57,7 @@ docs/_build/
 target/
 
 # dummy cookie
-bilicookies
+bilicookies*
 *.jpg
 
 bilicookies2

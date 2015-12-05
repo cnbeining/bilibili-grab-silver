@@ -1,7 +1,6 @@
 # bilibili-grab-silver
 Auto grab Bilibili's live silver
 
-
 Usage
 ------
 
@@ -13,24 +12,17 @@ Usage
     -c: cookies:
     location of cookies
     
-    -u: Uploader:
-    l: local
-    t: Tietuku
-    i: Imgur
-    
     -l: Default: INFO
     INFO/DEBUG
 
 Requirement
 -------
 
-- Python 2.7.9+ , with ssl support to use HTTPS   OR
+- Python 2.7 OR
 
-- Python 3.x , with ssl support to use HTTPS
+- Python 3.x, I don't really care.
 
 - requests
-
-- BaiduOcr (https://github.com/Linusp/baidu_ocr)
 
 Author
 -----
@@ -39,6 +31,15 @@ Beining, https://www.cnbeining.com/ , i#cnbeining.com .
 
 License
 -----
-GPLv2.
+GFUL V1.
 
-未经允许，禁止转载到大陆服务。
+https://www.cnbeining.com/gful-go-fuck-yourself-license-version-1/
+
+    Go Fuck Yourself Public License
+    Version 1.0, November 2015
+    Copyright (C) 2015 Beining <i@cnbeining.com>
+    Everyone is permitted to copy and distribute verbatim or modified
+    copies of this license document.
+    Go Fuck Yourself Public License
+    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+    0. You cannot do anything by/to/on/in/with/about/under/through this piece of code. Go fuck yourself.

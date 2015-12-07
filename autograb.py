@@ -14,7 +14,6 @@ import getopt
 from json import loads
 import datetime
 import time
-import logging
 import traceback
 import glob
 
@@ -131,10 +130,10 @@ def main(headers = {}):
 if __name__=='__main__':
     argv_list = []
     argv_list = sys.argv[1:]
-    cookiepath,uploader,LOG_LEVEL = '', '', ''
+    cookiepath,uploader = '', ''
     try:
-        opts, args = getopt.getopt(argv_list, "hc:l:",
-                                   ['help', "cookie=", "log="])
+        opts, args = getopt.getopt(argv_list, "hc:",
+                                   ['help', "cookie="])
     except getopt.GetoptError:
         usage()
         exit()
@@ -144,12 +143,6 @@ if __name__=='__main__':
             exit()
         if o in ('-c', '--cookie'):
             cookiepath = a
-        if o in ('-l', '--log'):
-            try:
-                LOG_LEVEL = str(a)
-            except Exception:
-                LOG_LEVEL = 'INFO'
-    logging.basicConfig(level = logging_level_reader(LOG_LEVEL))
     if cookiepath == '':
         cookiepath = './bilicookies'
     if not os.path.exists(cookiepath):

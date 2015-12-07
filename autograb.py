@@ -169,3 +169,5 @@ if __name__=='__main__':
     while 1:
         try:
             main(headers)
+        except KeyboardInterrupt:
+            exit()

@@ -14,6 +14,7 @@ import getopt
 from json import loads
 import datetime
 import time
+import hashlib
 import traceback
 import glob
 
@@ -26,6 +27,12 @@ try:
     input = raw_input
 except NameError:
     pass
+
+#----------------------------------------------------------------------
+def calc_sign(string):
+    """str/any->str
+    return MD5."""
+    return str(hashlib.md5(str(string).encode('utf-8')).hexdigest())
 
 #----------------------------------------------------------------------
 def get_new_task_time_and_award(headers):
